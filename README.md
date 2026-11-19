@@ -14,7 +14,7 @@ EndNote can take over the in text citations and rebuild the bibliography.
 </p>
 
 <p align="center">
-  <strong>🌐 <a href="https://refcheck.streamlit.app/">Access CiteBridge — Live Application</a></strong>
+  <strong>🌐 <a href="https://refcheck.streamlit.app/">Access refcheck — Live Application</a></strong>
 </p>
 
 ## Start
