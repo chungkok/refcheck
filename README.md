@@ -1,4 +1,4 @@
-# CiteBridge
+# refcheck
 
 Pull the reference list out of a manuscript, verify every reference in PubMed, record its PMID,
 show which ones have no match, and hand the whole set to EndNote. For Word manuscripts it also
