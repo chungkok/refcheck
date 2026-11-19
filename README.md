@@ -1,9 +1,21 @@
 # refcheck
 
-Pull the reference list out of a manuscript, verify every reference in PubMed, record its PMID,
+Intelligent Reference Extraction, Validation & Synchronisation
+
+refcheck streamlines academic reference management by extracting references from documents, verify every reference in PubMed, record its PMID,
 show which ones have no match, and hand the whole set to EndNote. For Word manuscripts it also
 writes a copy in which the numbered citations are replaced by EndNote temporary citations, so
 EndNote can take over the in text citations and rebuild the bibliography.
+
+<p align="center">
+  <a href="https://refcheck.streamlit.app/">
+    <img src="https://img.shields.io/badge/🚀_Launch-Live_Demo-brightgreen?style=for-the-badge" alt="Launch CiteBridge">
+  </a>
+</p>
+
+<p align="center">
+  <strong>🌐 <a href="https://refcheck.streamlit.app/">Access CiteBridge — Live Application</a></strong>
+</p>
 
 ## Start
 
