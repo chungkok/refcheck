@@ -1,0 +1,15 @@
+# RefCheck Streamlit settings (privacy related choices are explained in docs/PRIVACY.md)
+[browser]
+gatherUsageStats = false        # Streamlit's own usage statistics: off
+
+[server]
+maxUploadSize = 50              # MB
+enableXsrfProtection = true
+enableCORS = true
+
+[client]
+showErrorDetails = false        # no tracebacks with server paths in the browser
+toolbarMode = "minimal"
+
+[runner]
+magicEnabled = false

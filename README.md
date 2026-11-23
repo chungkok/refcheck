@@ -1,21 +1,23 @@
-# refcheck
+# RefCheck
 
-Intelligent Reference Extraction, Validation & Synchronisation
+Bibliographic integrity checking and citation reconciliation for biomedical manuscripts.
 
-refcheck streamlines academic reference management by extracting references from documents, verify every reference in PubMed, record its PMID,
-show which ones have no match, and hand the whole set to EndNote. For Word manuscripts it also
-writes a copy in which the numbered citations are replaced by EndNote temporary citations, so
-EndNote can take over the in text citations and rebuild the bibliography.
+RefCheck extracts the reference list from a manuscript, identifies each reference in PubMed,
+reports whether its details are correct (wrong DOI or PMID, wrong year or pages, duplicates,
+retracted or corrected papers), audits the numbered citations in the text against the list, and
+prepares an EndNote library plus a Word copy whose citations EndNote can take over. It runs on your
+own computer: only bibliographic search terms and identifiers are sent, to PubMed and to the
+optional secondary sources you choose (Crossref, OpenAlex, doi.org, NLM Catalog, DOAJ, Unpaywall).
 
 <p align="center">
   <a href="https://refcheck.streamlit.app/">
-    <img src="https://img.shields.io/badge/🚀_Launch-Live_Demo-brightgreen?style=for-the-badge" alt="Launch CiteBridge">
+    <img src="https://img.shields.io/badge/Live_demo-refcheck.streamlit.app-brightgreen?style=for-the-badge" alt="RefCheck live demo">
   </a>
 </p>
 
-<p align="center">
-  <strong>🌐 <a href="https://refcheck.streamlit.app/">Access refcheck — Live Application</a></strong>
-</p>
+> **The live demo runs on a remote server.** Files you upload there leave your computer. Use it
+> with published papers or test files. For unpublished manuscripts, install RefCheck locally.
+> See [docs/PRIVACY.md](docs/PRIVACY.md).
 
 ## Start
 
@@ -24,162 +26,61 @@ run_app.bat            (Windows: double click)
 ./run_app.sh           (Linux, macOS, WSL)
 ```
 
-The app opens at http://localhost:8501. Enter your email in the sidebar (NCBI asks every tool for a
-contact address). An NCBI API key is optional and makes searching about three times faster; you
-can create one under Account settings at ncbi.nlm.nih.gov. Both can also be set as the
-environment variables `NCBI_EMAIL` and `NCBI_API_KEY`.
+The first run creates a private Python environment with the tested versions and opens
+http://localhost:8501. Enter your email in the sidebar (NCBI asks every tool for a contact
+address). An NCBI API key is optional and makes searching about three times faster.
+More options, Docker and institutional hosting: [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
 Command line, same engine:
 
 ```
 python refcheck_cli.py manuscript.docx --email you@example.org
-python refcheck_cli.py refs.pdf --email you@example.org --outdir results --debug
-python refcheck_cli.py manuscript.docx --email you@example.org --pmid 6=12345678 --pmid 9=
+python refcheck_cli.py papers/ --email you@example.org --outdir results          # batch
+python refcheck_cli.py --roundtrip results/manuscript_integrity_report.json final.docx
 ```
 
-## Input files
+## What it does
 
-| File | Notes |
+| Step | Detail |
 |---|---|
-| .docx | Best choice. Typed numbers or Word automatic numbering. Citations in the text can be converted. |
-| .doc .odt .rtf | Converted with LibreOffice if installed, otherwise save as .docx first. |
-| .pdf | Uses the text layer; scanned PDFs need OCR first. Manuscript line numbers, running headers and watermarks such as "In review" are removed automatically, and letter spaced URLs are rejoined. |
-| .txt .md | Plain text. |
-| .csv .tsv .xlsx | One reference per row. A citation column is found by name, or separate columns (title, authors, journal, year, volume, issue, pages, doi, pmid). |
+| Extract | Word, PDF (text layer, optional local GROBID), text, Markdown, RTF, CSV, TSV, Excel, BibTeX, .bbl and LaTeX `thebibliography`; DOC and ODT via LibreOffice. Vancouver, AMA, APA, Frontiers and EndNote output styles. Unsure fields are flagged for correction. |
+| Identify | PubMed by written PMID, DOI, NCBI citation matcher, journal, volume and page, author and year, then title. Refuses to accept automatically when evidence conflicts, and says why. |
+| Verify | 14 integrity statuses, from VERIFIED to RETRACTED, each with field level findings and their source. Optional secondary evidence: retractions, corrections and expressions of concern from Crossref (publisher and Retraction Watch), OpenAlex and the Retraction Watch dataset (a local copy, updated from GitLab only when a new version is published); written DOIs checked at Crossref and doi.org; references missing from PubMed looked up in Crossref and OpenAlex; journals checked by ISSN check digit, NLM Catalog (MEDLINE indexing) and DOAJ; open access copies from Unpaywall. A reference not found in any source is never called fabricated. |
+| Audit | Every numbered citation in body text, tables, figure legends, footnotes and endnotes, mapped to the list: citations without a reference, uncited and duplicate references, citation order, mixed styles. Gene names, units and exponents are not mistaken for citations. |
+| EndNote | BibTeX export and a suggested Vancouver text for every matched reference. RIS and EndNote XML with your reference numbers as Labels and PMIDs as accession numbers; a Word copy with EndNote temporary citations; a check of the document after EndNote has updated it. |
+| Report | HTML, JSON, Excel and CSV reports with software version, thresholds, your decisions kept apart from automatic results, and every network request made. |
 
-The reference section is found by its heading (References, Bibliography, Literature cited, Works
-cited). Reading stops at Figure legends, Tables, Supplementary, Acknowledgements, publisher notes
-and similar headings. Recognised styles:
+User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 
-| Style | Example ending |
+## Status
+
+RefCheck 2.0 is in development on the `refcheck-2.0` branch. The functions above are implemented
+and covered by offline tests. **Their accuracy has not yet been measured on an independent
+benchmark**, and the matching thresholds are provisional values, not calibrated probabilities.
+The benchmarks, validation scripts and stress test manuscripts are kept in a separate validation
+package that goes with the methods paper; this repository holds the program. Results so far and
+the feature by feature status (implemented, partial, planned) are in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#status-of-each-feature).
+
+## Documentation
+
+| Document | Content |
 |---|---|
-| Vancouver / AMA | `Neuro Oncol. 2025;27(8):2035-2046.` |
-| No period before the year | `J Clin Oncol 2025;40:1-10.` |
-| Frontiers | `Semin Oncol (2016) 43(6):676-81.` |
-| EndNote online first output | `Sci Rep. 15. England(2025). p. 2204.` |
-| APA | `Smith, J. (2020). Title. Journal, 12(3), 45-67.` |
-| Preprints, reports, web pages | parsed as far as possible; usually not in PubMed |
-
-PMIDs and DOIs written anywhere in a reference are picked up and used first. The parsed table can
-be edited in the app before searching.
-
-## What you get for each kind of file
-
-| Input | Review in the app | Downloads |
-|---|---|---|
-| Word manuscript (.docx) | yes | EndNote import (.ris), Word copy ready for EndNote, report (.xlsx, .csv), PMID list |
-| PDF, text, CSV, Excel, or a Word file that is only a reference list | yes | EndNote import (.ris), report (.xlsx, .csv), PMID list |
-
-## Reviewing the matches
-
-After the PubMed check, step 3 has two views.
-
-**Compare one by one.** Pick a group (all, matched, need a look, not in PubMed, not yet checked) and
-step through it with Previous and Next. For each reference you see the best PubMed match and the
-runner up next to the fields from your document (title with % similarity, first author, journal,
-year, volume, issue, pages, DOI), each marked same or different, plus the PubMed abstract and link.
-Then choose:
-
-* **Use PMID …** for the best match or the runner up
-* **Not in PubMed** to import the reference as written
-* **type a PMID** you found yourself; it is fetched and shown side by side so you can confirm it
-
-Each choice marks the reference as checked.
-
-**All references (table).** Every row with status, PMID going to EndNote, title similarity, both
-titles and a PubMed link. Edit the PMID or tick checked directly; accept all yellow suggestions in
-one click.
-
-The report records what you decided and whether you checked each reference.
-
-## How each reference is matched
-
-1. A PMID written in the reference
-2. The DOI
-3. NCBI citation matcher (journal, year, volume, first page, first author). This works even when
-   the title differs from PubMed, for example superscripts such as Rapid CNS²
-4. Journal, volume and page search; first author, year and page search
-5. Title phrase, then each title word tagged [Title], with and without author and year
-
-Every candidate is scored on title similarity, first author, year, journal, volume, first page,
-DOI and PMID. Searching stops at the first confident match.
-
-| Status | Meaning |
-|---|---|
-| AUTO_MATCH | score 86 or more and clearly ahead of the runner up |
-| REVIEW | score 70 to 85; a suggestion is shown for you to accept or replace |
-| NO_MATCH | nothing close; usually preprints, books, reports, or a citation error |
-| MANUAL | you supplied or accepted the PMID |
-| ERROR | PubMed could not be reached for this reference |
-
-## Outputs
-
-| File | Use |
-|---|---|
-| `*_endnote.ris` | Import into EndNote. Every reference is included: matched ones with full PubMed data and abstract, unmatched ones as written in your manuscript. |
-| `*_endnote_ready.docx` | Word copy with citations replaced, e.g. `[2,3]` becomes `{Patel, 2022 #2; Deacon, 2025 #3}`. |
-| `*_pubmed_report.xlsx` / `.csv` | One row per reference: status, PMID, link, whether you checked it, whether it is cited in the text, score, PubMed versus parsed fields, runner up. For Word input a second sheet lists every in text citation found and anything left unchanged. |
-| `*_pmids.txt` | The PMIDs, one per line, for PubMed batch search or other tools. |
-
-In EndNote each record carries:
-
-* **Label**: your manuscript reference number(s)
-* **Accession Number**: the PMID
-* **Keywords**: `refcheck AUTO_MATCH`, `refcheck MANUAL` or `refcheck NO_MATCH`
-* **Notes**: the original reference text
-
-If the same paper appears twice in the list, both numbers point to one record (Label shows both).
-
-## Finishing in EndNote and Word
-
-1. In EndNote, File > New to make an **empty** library.
-2. File > Import > File. Choose the `.ris` file, Import Option **Reference Manager (RIS)**, Text
-   Translation **Unicode (UTF-8)**.
-3. Show the Record Number and Label columns. Record 1 should carry Label 1, record 2 Label 2, and
-   so on. If your library numbers start elsewhere, set *First record number* in the app (or
-   `--record-start`) and rebuild the Word copy.
-4. Open `*_endnote_ready.docx` in Word, pick the output style in the EndNote tab, then click
-   **Update Citations and Bibliography**. EndNote turns each temporary citation into a live one and
-   writes the bibliography at the end of the document.
-
-The record number is what tells EndNote exactly which reference is meant. If you would rather
-import into an existing library, untick *Include EndNote record numbers*; the citations become
-`{Patel, 2022}` and EndNote asks you to choose whenever more than one record fits.
-
-If you changed the temporary citation delimiters in EndNote's Cite While You Write preferences,
-set them back to `{ }` and `#`, or the citations will not be recognised.
-
-## What the Word conversion does and does not touch
-
-The app counts each citation form in your document and presets the options to match.
-
-| Form | Example | Default |
-|---|---|---|
-| Square brackets | `[1]` `[1,2]` `[1-3]` `[1, 3-5]` | on |
-| Superscript | ¹ ¹ʼ² ¹⁻³ | on |
-| Parentheses | `(1,2)` | on only when it is clearly the main form |
-| Attached to words | `classification1.` `diagnosis1,2.` | on only when it is clearly the main form |
-
-The last form appears when superscript formatting has been lost. Numbers that belong to the word
-are never treated as citations: gene and genome names (IDH1, TP53, CNS5, H3K27me3, hg19, chr17,
-rs IDs) and anything outside the reference list. A number stuck to a word such as grade, stage,
-phase, type, figure or table (`WHO grade37`) is ambiguous, so it is left unchanged and listed for
-you to decide.
-
-Body text, tables and figure legends are all included. Also left unchanged and listed in the
-report:
-
-* numbers outside the reference list, such as `[12]` in a list of 8
-* superscripts that look like exponents or units (`10⁶`, `mm²`, `Ca²⁺`)
-* citations that are already EndNote, Zotero or Word cross reference fields
-
-The report also lists references that are never cited in the text, and the app warns when the same
-paper appears twice in the reference list. The original file is never changed.
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | modules, diagrams, design decisions, feature status |
+| [ALGORITHM_SPECIFICATION](docs/ALGORITHM_SPECIFICATION.md) | every rule, weight and threshold |
+| [PRIVACY](docs/PRIVACY.md), [DATA_FLOW](docs/DATA_FLOW.md) | what leaves the computer, what is stored and for how long |
+| [INSTALLATION](docs/INSTALLATION.md), [USER_GUIDE](docs/USER_GUIDE.md) | running and using RefCheck |
+| [DEPENDENCIES](docs/DEPENDENCIES.md), [CHANGELOG](CHANGELOG.md) | licences, security status, changes |
 
 ## Tests
 
 ```
-python tests/test_offline.py
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
 ```
 
-Uses real PubMed records for five references saved as fixtures, so it runs without network access.
+The tests run offline: PubMed is replaced by saved real records.
+
+## Licence
+
+Apache 2.0. See [LICENSE](LICENSE).

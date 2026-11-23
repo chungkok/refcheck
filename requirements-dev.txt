@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest>=8
+bandit>=1.7
+pip-audit>=2.7
+reportlab>=4.0      # builds the PDF used in tests
+pytest-cov>=5

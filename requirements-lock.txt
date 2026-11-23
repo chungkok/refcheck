@@ -1,0 +1,11 @@
+# Exact versions RefCheck 2.0.0.dev0 was tested with (Python 3.13, 21 Nov 2026).
+streamlit==1.67.0
+pandas==3.0.5
+numpy==2.5.3
+pyarrow==26.0.1
+requests==2.34.2
+python-docx==1.2.0
+pypdf==7.1.1
+# pypdf 6.17.0 had 25 known CVEs (pip-audit, 21 Nov 2026); 7.1.1 gave identical extraction on the test PDFs
+openpyxl==3.1.5
+lxml==6.1.3

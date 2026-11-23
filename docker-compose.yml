@@ -1,0 +1,17 @@
+# docker compose up    then open http://localhost:8501
+services:
+  refcheck:
+    build: .
+    ports:
+      - "127.0.0.1:8501:8501"      # this computer only; change deliberately for institutional hosting
+    environment:
+      REFCHECK_DEPLOYMENT: local    # set to "hosted" when other people reach it over a network
+      NCBI_EMAIL: ${NCBI_EMAIL:-}
+      NCBI_API_KEY: ${NCBI_API_KEY:-}
+    volumes:
+      - refcheck-cache:/home/refcheck/.cache   # PubMed answers only, never manuscripts
+    read_only: true
+    tmpfs:
+      - /tmp
+volumes:
+  refcheck-cache:

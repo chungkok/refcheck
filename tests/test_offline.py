@@ -78,8 +78,8 @@ def test_line_numbered_pdf_text():
     assert strip_line_numbers(["Blood. 2020;1:2-3.", "Accessed 2025"]) == ["Blood. 2020;1:2-3.", "Accessed 2025"]
 
 
-def test_end_to_end(tmp=None):
-    tmp = Path(tmp or tempfile.mkdtemp())
+def test_end_to_end(tmp_path=None):
+    tmp = Path(tmp_path or tempfile.mkdtemp())
     for word_numbering in (False, True):
         src = tmp / f"ms_{word_numbering}.docx"
         build(src, word_numbering)
@@ -109,6 +109,8 @@ def test_end_to_end(tmp=None):
         assert "[12]" in text                              # out of range left alone
         assert "Acta Neuropathol. 2022" not in text        # old reference list removed
         assert "adapted from {Patel, 2022 #2}" in text      # figure legends after the list
+        assert out["reference_style"]["family"] and "detected_style" in out["rows"][0]
+        assert "detected_style" in out["paths"]["csv"].read_text(encoding="utf-8").splitlines()[0]
 
 
 if __name__ == "__main__":
